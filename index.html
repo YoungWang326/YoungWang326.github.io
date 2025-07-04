@@ -4,82 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Personal Homepage</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #e3f2fd, #ffffff);
-      color: #333;
-      overflow-x: hidden;
-    }
-    header {
-      background: linear-gradient(135deg, #1e88e5, #42a5f5);
-      padding: 2rem;
-      text-align: center;
-      color: white;
-      animation: slideDown 1s ease-out;
-    }
-    @keyframes slideDown {
-      from { transform: translateY(-100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      margin-top: 1rem;
-      animation: fadeIn 2s ease-in;
-    }
-    nav a {
-      text-decoration: none;
-      color: #1e88e5;
-      font-weight: bold;
-      position: relative;
-    }
-    nav a::after {
-      content: '';
-      position: absolute;
-      width: 0%;
-      height: 2px;
-      bottom: -2px;
-      left: 0;
-      background-color: #1e88e5;
-      transition: width 0.3s;
-    }
-    nav a:hover::after {
-      width: 100%;
-    }
-    section {
-      padding: 4rem 2rem;
-      text-align: center;
-    }
-    .card {
-      background: white;
-      margin: 1rem auto;
-      padding: 2rem;
-      max-width: 600px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      transform: translateY(20px);
-      opacity: 0;
-      animation: fadeInUp 1s ease-out forwards;
-    }
-    @keyframes fadeInUp {
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-    footer {
-      text-align: center;
-      padding: 1rem;
-      background: #f1f1f1;
-      color: #888;
-      font-size: 0.9rem;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="particles-js"></div>
   <header>
     <h1>Welcome to My Homepage</h1>
     <p>Simple. Elegant. Personal.</p>
@@ -116,19 +44,7 @@
     &copy; 2025 Your Name. All rights reserved.
   </footer>
 
-  <script>
-    // Animate cards on scroll
-    const cards = document.querySelectorAll('.card');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.animationDelay = '0.2s';
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.2 });
-
-    cards.forEach(card => observer.observe(card));
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
