@@ -1,230 +1,262 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-    <meta charset="UTF-8" />
-    <title>日期笔记日历</title>
+<meta charset="UTF-8" />
+<title>日期笔记日历</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-        body {
-            margin: 0;
-            height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-            background: linear-gradient(180deg, #f8fafc, #eef2ff);
-            display: flex;
-            flex-direction: column;
-        }
+<style>
+  * { box-sizing: border-box; }
 
-        header {
-            padding: 16px 24px;
-            background: #ffffff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            z-index: 10;
-        }
+  body {
+    margin: 0;
+    height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    background: linear-gradient(180deg, #f8fafc, #eef2ff);
+    display: flex;
+    flex-direction: column;
+  }
 
-        header h2 {
-            margin: 0 0 10px 0;
-        }
+  header {
+    padding: 16px 24px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
 
-        .controls {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
 
-        .controls input,
-        .controls button {
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 6px;
-            border: 1px solid #c7d2fe;
-        }
+  .controls input,
+  .controls button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #c7d2fe;
+  }
 
-        .controls button {
-            background: #6366f1;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+  .controls button {
+    background: #6366f1;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
 
-        .controls button:hover {
-            background: #4f46e5;
-        }
+  .controls button.export {
+    background: #16a34a;
+  }
 
-        main {
-            flex: 1;
-            padding: 16px;
-            overflow: auto;
-        }
+  main {
+    flex: 1;
+    padding: 16px;
+    overflow: auto;
+  }
 
-        .calendar {
-            height: 100%;
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 12px;
-        }
+  .calendar {
+    min-height: 100%;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+  }
 
-        .day {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
+  .day {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    cursor: pointer;
+  }
 
-        .day:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-        }
+  /* 高亮（通用） */
+  .day.highlight {
+    border: 2px solid #6366f1;
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  }
 
-        .day.has-note {
-            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-            border: 1px solid #6366f1;
-        }
+  /* 周末基础 */
+  .day.weekend {
+    background: #fff7ed;
+  }
 
-        .day-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
+  /* 周末高亮 */
+  .day.weekend.highlight {
+    border-color: #fb923c;
+    background: linear-gradient(135deg, #ffedd5, #fed7aa);
+  }
 
-        .date {
-            font-size: 13px;
-            color: #374151;
-            font-weight: 600;
-        }
+  .day-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
 
-        .weekday {
-            font-size: 12px;
-            color: #6366f1;
-        }
+  .weekday { color: #6366f1; }
+  .weekend .weekday { color: #ea580c; }
 
-        .note {
-            margin-top: 6px;
-            font-size: 13px;
-            color: #111827;
-            white-space: pre-wrap;
-            word-break: break-word;
-            flex: 1;
-        }
+  .note {
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    flex: 1;
+  }
 
-        .empty {
-            color: #9ca3af;
-            font-style: italic;
-        }
-    </style>
+  .empty {
+    color: #9ca3af;
+    font-style: italic;
+  }
+</style>
 </head>
 
 <body>
 
-    <header>
-        <h2>日期笔记日历</h2>
-        <div class="controls">
-            <label>开始日期：
-                <input type="date" id="startDate">
-            </label>
-            <label>结束日期：
-                <input type="date" id="endDate">
-            </label>
-            <button onclick="generateCalendar()">生成日历</button>
-        </div>
-    </header>
+<header>
+  <div class="controls">
+    <label>开始日期：
+      <input type="date" id="startDate">
+    </label>
+    <label>结束日期：
+      <input type="date" id="endDate">
+    </label>
+    <button onclick="generateCalendar()">生成日历</button>
+    <button class="export" onclick="exportImage()">导出为图片</button>
+  </div>
+</header>
 
-    <main>
-        <div id="calendar" class="calendar"></div>
-    </main>
+<main>
+  <div id="calendar" class="calendar"></div>
+</main>
 
-    <script>
-        const notes = {};
-        const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+<script>
+  const STORAGE_KEY = "calendarNotesV1";
 
-        function generateCalendar() {
-            const startInput = document.getElementById("startDate").value;
-            const endInput = document.getElementById("endDate").value;
-            if (!startInput || !endInput) {
-                alert("请选择开始和结束日期");
-                return;
-            }
-
-            const start = new Date(startInput);
-            const end = new Date(endInput);
-            if (start > end) {
-                alert("开始日期不能大于结束日期");
-                return;
-            }
-
-            const calendar = document.getElementById("calendar");
-            calendar.innerHTML = "";
-
-            let current = new Date(start);
-
-            while (current <= end) {
-                const dateStr = current.toISOString().split("T")[0];
-                const weekdayStr = weekdays[current.getDay()];
-
-                const dayDiv = document.createElement("div");
-                dayDiv.className = "day";
-
-                if (notes[dateStr]) {
-                    dayDiv.classList.add("has-note");
-                }
-
-                const header = document.createElement("div");
-                header.className = "day-header";
-
-                const dateDiv = document.createElement("div");
-                dateDiv.className = "date";
-                dateDiv.textContent = dateStr;
-
-                const weekdayDiv = document.createElement("div");
-                weekdayDiv.className = "weekday";
-                weekdayDiv.textContent = weekdayStr;
-
-                header.appendChild(dateDiv);
-                header.appendChild(weekdayDiv);
-
-                const noteDiv = document.createElement("div");
-                noteDiv.className = "note";
-                noteDiv.textContent = notes[dateStr] || "点击添加笔记";
-                if (!notes[dateStr]) {
-                    noteDiv.classList.add("empty");
-                }
-
-                dayDiv.appendChild(header);
-                dayDiv.appendChild(noteDiv);
-
-                dayDiv.onclick = () => {
-                    const input = prompt("请输入当天笔记：", notes[dateStr] || "");
-                    if (input !== null) {
-                        if (input.trim() === "") {
-                            delete notes[dateStr];
-                            dayDiv.classList.remove("has-note");
-                            noteDiv.textContent = "点击添加笔记";
-                            noteDiv.classList.add("empty");
-                        } else {
-                            notes[dateStr] = input;
-                            dayDiv.classList.add("has-note");
-                            noteDiv.textContent = input;
-                            noteDiv.classList.remove("empty");
-                        }
-                    }
-                };
-
-                calendar.appendChild(dayDiv);
-                current.setDate(current.getDate() + 1);
-            }
+  let state = {
+    startDate: "",
+    endDate: "",
+    days: {
+      /*
+        "2025-01-01": {
+          note: "内容",
+          highlight: true
         }
-    </script>
+      */
+    }
+  };
+
+  const weekdays = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+
+  /* ---------- 本地存储 ---------- */
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function loadState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      state = JSON.parse(saved);
+      startDate.value = state.startDate;
+      endDate.value = state.endDate;
+      if (state.startDate && state.endDate) {
+        generateCalendar();
+      }
+    }
+  }
+
+  /* ---------- 日历生成 ---------- */
+  function generateCalendar() {
+    state.startDate = startDate.value;
+    state.endDate = endDate.value;
+    saveState();
+
+    const start = new Date(state.startDate);
+    const end = new Date(state.endDate);
+    if (start > end) return alert("开始日期不能大于结束日期");
+
+    calendar.innerHTML = "";
+    let current = new Date(start);
+
+    while (current <= end) {
+      const dateStr = current.toISOString().split("T")[0];
+      const dayIndex = current.getDay();
+      const isWeekend = dayIndex === 0 || dayIndex === 6;
+      const dayState = state.days[dateStr] || {};
+
+      const box = document.createElement("div");
+      box.className = "day";
+      if (isWeekend) box.classList.add("weekend");
+      if (dayState.highlight) box.classList.add("highlight");
+
+      const header = document.createElement("div");
+      header.className = "day-header";
+      header.innerHTML = `
+        <div>${dateStr}</div>
+        <div class="weekday">${weekdays[dayIndex]}</div>
+      `;
+
+      const note = document.createElement("div");
+      note.className = "note";
+
+      if (dayState.note) {
+        note.textContent = dayState.note;
+      } else {
+        note.textContent = "点击添加笔记";
+        note.classList.add("empty");
+      }
+
+      box.append(header, note);
+
+      box.onclick = () => editDay(dateStr, isWeekend);
+
+      calendar.appendChild(box);
+      current.setDate(current.getDate() + 1);
+    }
+  }
+
+  /* ---------- 编辑 ---------- */
+  function editDay(dateStr, isWeekend) {
+    const existing = state.days[dateStr] || {};
+    const noteText = prompt("请输入当天笔记：", existing.note || "");
+    if (noteText === null) return;
+
+    if (!noteText.trim()) {
+      delete state.days[dateStr];
+      saveState();
+      generateCalendar();
+      return;
+    }
+
+    const highlight = confirm("是否高亮当天？");
+
+    state.days[dateStr] = {
+      note: noteText,
+      highlight
+    };
+
+    saveState();
+    generateCalendar();
+  }
+
+  /* ---------- 导出 ---------- */
+  function exportImage() {
+    html2canvas(calendar, {
+      backgroundColor: "#f8fafc",
+      scale: 2
+    }).then(canvas => {
+      const link = document.createElement("a");
+      link.download = "日历笔记.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  }
+
+  loadState();
+</script>
 
 </body>
-
 </html>
