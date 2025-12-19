@@ -1,50 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Personal Homepage</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <title>日期笔记日历</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+            background: linear-gradient(180deg, #f8fafc, #eef2ff);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 16px 24px;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            z-index: 10;
+        }
+
+        header h2 {
+            margin: 0 0 10px 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls input,
+        .controls button {
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid #c7d2fe;
+        }
+
+        .controls button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .controls button:hover {
+            background: #4f46e5;
+        }
+
+        main {
+            flex: 1;
+            padding: 16px;
+            overflow: auto;
+        }
+
+        .calendar {
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+
+        .day {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .day:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .day.has-note {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            border: 1px solid #6366f1;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .date {
+            font-size: 13px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .weekday {
+            font-size: 12px;
+            color: #6366f1;
+        }
+
+        .note {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #111827;
+            white-space: pre-wrap;
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+    </style>
 </head>
+
 <body>
-  <div id="particles-js"></div>
-  <header>
-    <h1>Welcome to My Homepage</h1>
-    <p>Simple. Elegant. Personal.</p>
-  </header>
 
-  <nav>
-    <a href="#about">About</a>
-    <a href="#portfolio">Portfolio</a>
-    <a href="#contact">Contact</a>
-  </nav>
+    <header>
+        <h2>日期笔记日历</h2>
+        <div class="controls">
+            <label>开始日期：
+                <input type="date" id="startDate">
+            </label>
+            <label>结束日期：
+                <input type="date" id="endDate">
+            </label>
+            <button onclick="generateCalendar()">生成日历</button>
+        </div>
+    </header>
 
-  <section id="about">
-    <div class="card">
-      <h2>About Me</h2>
-      <p>Hello! I'm a passionate web developer who loves creating beautiful, interactive websites. Let's build something great together!</p>
-    </div>
-  </section>
+    <main>
+        <div id="calendar" class="calendar"></div>
+    </main>
 
-  <section id="portfolio">
-    <div class="card">
-      <h2>Portfolio</h2>
-      <p>Here are some of my favorite projects, ranging from responsive websites to interactive web apps.</p>
-    </div>
-  </section>
+    <script>
+        const notes = {};
+        const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
 
-  <section id="contact">
-    <div class="card">
-      <h2>Contact</h2>
-      <p>Feel free to reach out via email at <strong>you@example.com</strong>.</p>
-    </div>
-  </section>
+        function generateCalendar() {
+            const startInput = document.getElementById("startDate").value;
+            const endInput = document.getElementById("endDate").value;
+            if (!startInput || !endInput) {
+                alert("请选择开始和结束日期");
+                return;
+            }
 
-  <footer>
-    &copy; 2025 Your Name. All rights reserved.
-  </footer>
+            const start = new Date(startInput);
+            const end = new Date(endInput);
+            if (start > end) {
+                alert("开始日期不能大于结束日期");
+                return;
+            }
 
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <script src="script.js"></script>
+            const calendar = document.getElementById("calendar");
+            calendar.innerHTML = "";
+
+            let current = new Date(start);
+
+            while (current <= end) {
+                const dateStr = current.toISOString().split("T")[0];
+                const weekdayStr = weekdays[current.getDay()];
+
+                const dayDiv = document.createElement("div");
+                dayDiv.className = "day";
+
+                if (notes[dateStr]) {
+                    dayDiv.classList.add("has-note");
+                }
+
+                const header = document.createElement("div");
+                header.className = "day-header";
+
+                const dateDiv = document.createElement("div");
+                dateDiv.className = "date";
+                dateDiv.textContent = dateStr;
+
+                const weekdayDiv = document.createElement("div");
+                weekdayDiv.className = "weekday";
+                weekdayDiv.textContent = weekdayStr;
+
+                header.appendChild(dateDiv);
+                header.appendChild(weekdayDiv);
+
+                const noteDiv = document.createElement("div");
+                noteDiv.className = "note";
+                noteDiv.textContent = notes[dateStr] || "点击添加笔记";
+                if (!notes[dateStr]) {
+                    noteDiv.classList.add("empty");
+                }
+
+                dayDiv.appendChild(header);
+                dayDiv.appendChild(noteDiv);
+
+                dayDiv.onclick = () => {
+                    const input = prompt("请输入当天笔记：", notes[dateStr] || "");
+                    if (input !== null) {
+                        if (input.trim() === "") {
+                            delete notes[dateStr];
+                            dayDiv.classList.remove("has-note");
+                            noteDiv.textContent = "点击添加笔记";
+                            noteDiv.classList.add("empty");
+                        } else {
+                            notes[dateStr] = input;
+                            dayDiv.classList.add("has-note");
+                            noteDiv.textContent = input;
+                            noteDiv.classList.remove("empty");
+                        }
+                    }
+                };
+
+                calendar.appendChild(dayDiv);
+                current.setDate(current.getDate() + 1);
+            }
+        }
+    </script>
+
 </body>
+
 </html>
